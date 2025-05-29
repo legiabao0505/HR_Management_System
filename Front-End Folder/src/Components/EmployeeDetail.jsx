@@ -2,6 +2,7 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link, Outlet, useLocation } from 'react-router-dom'
 import EmployeeProfile from './EmployeeProfile'
+import EmployeeReports from './EmployeeReports'
 
 const EmployeeDetail = () => {
   const [employee, setEmployee] = useState({})
@@ -53,6 +54,15 @@ const EmployeeDetail = () => {
                   <span className="ms-2 d-none d-sm-inline">Schedule</span>
                 </Link>
               </li>
+              <li className="w-100">
+                <Link
+                  to={`/employee_detail/${id}/reports`}
+                  className={`nav-link px-0 align-middle text-white${location.pathname.includes('reports') ? ' active' : ''}`}
+                >
+                  <i className="fs-5 bi-file-earmark-text ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Reports</span>
+                </Link>
+              </li>
               <li className="w-100" onClick={handleLogout}>
                 <span className="nav-link px-0 align-middle text-white" style={{ cursor: "pointer" }}>
                   <i className="fs-5 bi-power ms-2"></i>
@@ -70,6 +80,8 @@ const EmployeeDetail = () => {
           {/* Nếu là trang profile thì hiển thị profile, nếu là schedule thì Outlet sẽ render lịch */}
           {location.pathname === `/employee_detail/${id}` ? (
             <EmployeeProfile employee={employee} />
+          ) : location.pathname.includes('reports') ? (
+            <EmployeeReports employeeId={id} />
           ) : (
             <Outlet />
           )}
