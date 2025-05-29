@@ -86,9 +86,7 @@ const AutoSchedule = () => {
             setPage(1);
           }}
         />
-        <span>
-          Page {page} / {totalPage || 1}
-        </span>
+       
       </div>
 
       <table className="table table-bordered">
@@ -143,6 +141,9 @@ const AutoSchedule = () => {
         >
           Previous
         </button>
+         <span>
+          Page {page} / {totalPage || 1}
+        </span>
         <button
           className="btn btn-primary ms-2"
           disabled={page === totalPage || totalPage === 0}
