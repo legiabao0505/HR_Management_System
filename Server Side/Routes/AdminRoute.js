@@ -85,7 +85,7 @@ router.post('/add_employee', upload.single('image'), async (req, res) => {
     await pool.query(sql, [values]);
     return res.json({Status: true});
   } catch (err) {
-    return res.json({Status: false, Error: err});
+    return res.json({ Status: false, Error: err.message || String(err) });
   }
 });
 
@@ -94,19 +94,44 @@ router.get('/employee', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
+  const category_id = req.query.category_id || '';
+  const min_salary = req.query.min_salary || '';
+  const max_salary = req.query.max_salary || '';
+  const ai_type = req.query.ai_type || '';
 
-  let where = '';
+  let where = [];
   let params = [];
 
   if (search) {
-    where = 'WHERE name LIKE ? OR email LIKE ? OR address LIKE ?';
+    where.push('(name LIKE ? OR email LIKE ? OR address LIKE ?)');
     params.push(`%${search}%`, `%${search}%`, `%${search}%`);
   }
+  if (category_id) {
+    where.push('category_id = ?');
+    params.push(category_id);
+  }
+  if (min_salary) {
+    where.push('salary >= ?');
+    params.push(min_salary);
+  }
+  if (max_salary) {
+    where.push('salary <= ?');
+    params.push(max_salary);
+  }
+  // Nếu lọc theo loại AI (A/B/C)
+  if (ai_type) {
+    where.push(`id IN (
+      SELECT employee_id FROM employee_evaluations
+      WHERE type = ?
+    )`);
+    params.push(ai_type);
+  }
 
-  const sql = `SELECT * FROM employee ${where} LIMIT ? OFFSET ?`;
+  const whereStr = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const sql = `SELECT * FROM employee ${whereStr} LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
-  const countSql = `SELECT COUNT(*) as total FROM employee ${where}`;
+  const countSql = `SELECT COUNT(*) as total FROM employee ${whereStr}`;
 
   try {
     const [result] = await pool.query(sql, params);
@@ -184,12 +209,31 @@ router.get('/employee_count', async (req, res) => {
 });
 
 router.get('/salary_count', async (req, res) => {
-  const sql = "select sum(salary) as salaryOFEmp from employee";
   try {
-    const [result] = await pool.query(sql);
-    return res.json({Status: true, Result: result});
+    // Lấy tổng salary từ bảng employee
+    const [salaryResult] = await pool.query(
+      "SELECT SUM(salary) AS total_salary FROM employee"
+    );
+
+    // Lấy tổng bonus_salary mới nhất của mỗi employee từ employee_evaluations
+    const [bonusResult] = await pool.query(`
+      SELECT IFNULL(SUM(bonus_salary),0) AS total_bonus
+      FROM (
+        SELECT ee.bonus_salary
+        FROM employee_evaluations ee
+        INNER JOIN (
+          SELECT employee_id, MAX(id) AS max_id
+          FROM employee_evaluations
+          GROUP BY employee_id
+        ) latest ON ee.employee_id = latest.employee_id AND ee.id = latest.max_id
+      ) t
+    `);
+
+    const total = Number(salaryResult[0].total_salary || 0) + Number(bonusResult[0].total_bonus || 0);
+
+    res.json({ Status: true, Result: [{ salaryOFEmp: total }] });
   } catch (err) {
-    return res.json({Status: false, Error: "Query Error"+err});
+    res.json({ Status: false, Error: err.message });
   }
 });
 
@@ -211,58 +255,59 @@ router.get('/logout', (req, res) => {
 // Auto-schedule work shifts for all employees (Monday-Saturday, 2 shifts/day)
 router.post('/auto_schedule', async (req, res) => {
   try {
-    // 1. Get all employees
     const [employees] = await pool.query("SELECT id FROM employee");
     if (!employees.length) return res.json({ Status: false, Error: "No employees found" });
 
-    // 2. Prepare schedule parameters
-    const startDate = moment().startOf('isoWeek'); // Monday this week
-    const days = 6; // Monday to Saturday
-    const shifts = ['morning', 'night'];
+    // Start from the first Monday of the month
+    let startDate = moment().startOf('month');
+    while (startDate.isoWeekday() !== 1) { // 1 = Monday
+      startDate.add(1, 'day');
+    }
+    const endDate = moment(startDate).endOf('month');
     let schedule = [];
 
-    // 3. Remove old schedules for this week (optional)
-    const weekDates = [];
-    for (let d = 0; d < days; d++) {
-      weekDates.push(startDate.clone().add(d, 'days').format('YYYY-MM-DD'));
-    }
+    // Remove old schedules for this month
     await pool.query(
-      "DELETE FROM work_schedules WHERE date IN (?)",
-      [weekDates]
+      "DELETE FROM work_schedules WHERE date >= ? AND date <= ?",
+      [startDate.clone().startOf('month').format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')]
     );
 
-    // 4. Round-robin assignment: Each employee works one shift per day, not two consecutive shifts
-    let empIdx = 0;
-    let lastShift = {}; // employee_id: 'morning'/'night'
+    // Generate schedule for each day (skip Sundays)
+    let current = startDate.clone();
+    let weekNumber = 1;
+    let lastWeek = current.isoWeek();
 
-    for (let d = 0; d < days; d++) {
-      const date = startDate.clone().add(d, 'days').format('YYYY-MM-DD');
-      // Shuffle employees for fairness
-      const empOrder = [...employees];
-      for (let i = empOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [empOrder[i], empOrder[j]] = [empOrder[j], empOrder[i]];
+    while (current.isSameOrBefore(endDate, 'day')) {
+      const dayOfWeek = current.isoWeekday(); // 1=Monday, 7=Sunday
+
+      // Increase weekNumber when a new week starts
+      if (current.isoWeek() !== lastWeek) {
+        weekNumber++;
+        lastWeek = current.isoWeek();
       }
-      // Assign shifts
-      let morningCount = 0, nightCount = 0;
-      for (let i = 0; i < empOrder.length; i++) {
-        const emp = empOrder[i];
-        // Alternate shift for each employee, avoid consecutive same shift
-        let shift = (i % 2 === 0) ? 'morning' : 'night';
-        if (lastShift[emp.id] === shift) shift = (shift === 'morning') ? 'night' : 'morning';
-        if (shift === 'morning') morningCount++; else nightCount++;
-        schedule.push([emp.id, date, shift]);
-        lastShift[emp.id] = shift;
+
+      if (dayOfWeek !== 7) { // Skip Sunday
+        for (let emp of employees) {
+          let shift;
+          if (emp.id % 2 === 1) { // Odd id
+            shift = weekNumber % 2 === 1 ? 'morning' : 'night';
+          } else { // Even id
+            shift = weekNumber % 2 === 1 ? 'night' : 'morning';
+          }
+          schedule.push([emp.id, current.format('YYYY-MM-DD'), shift]);
+        }
       }
+      current.add(1, 'day');
     }
 
-    // 5. Insert schedule into DB
-    await pool.query(
-      "INSERT INTO work_schedules (employee_id, date, shift) VALUES ?",
-      [schedule]
-    );
+    if (schedule.length > 0) {
+      await pool.query(
+        "INSERT INTO work_schedules (employee_id, date, shift) VALUES ?",
+        [schedule]
+      );
+    }
 
-    res.json({ Status: true, Message: "Auto-scheduling completed", ScheduleCount: schedule.length });
+    res.json({ Status: true, Message: "Auto-scheduling for 1 month completed", ScheduleCount: schedule.length });
   } catch (err) {
     res.json({ Status: false, Error: err.message });
   }
@@ -283,11 +328,27 @@ router.get('/work_schedules_this_week_with_employee', async (req, res) => {
   }
 });
 
+router.get('/work_schedules_this_month_with_employee', async (req, res) => {
+  try {
+    const sql = `
+      SELECT ws.id, ws.employee_id, e.name, DATE_FORMAT(ws.date, '%Y-%m-%d') as date, ws.shift
+      FROM work_schedules ws
+      JOIN employee e ON ws.employee_id = e.id
+      WHERE MONTH(ws.date) = MONTH(CURDATE()) AND YEAR(ws.date) = YEAR(CURDATE())
+      ORDER BY ws.employee_id, ws.date
+    `;
+    const [result] = await pool.query(sql);
+    return res.json({ Status: true, Result: result });
+  } catch (err) {
+    return res.json({ Status: false, Error: err.message });
+  }
+});
+
 router.get('/employee_evaluations', async (req, res) => {
   try {
     const search = req.query.search || '';
     let sql = `
-      SELECT ee.id, ee.employee_id, e.name, ee.comment, ee.type, ee.performance_percent, ee.bonus_salary, ee.created_at
+      SELECT ee.id, ee.employee_id, e.name, ee.comment, ee.type, ee.performance_percent, ee.bonus_salary, ee.created_at, ee.suggestion
       FROM employee_evaluations ee
       JOIN employee e ON ee.employee_id = e.id
     `;
@@ -303,5 +364,143 @@ router.get('/employee_evaluations', async (req, res) => {
     res.json({ Status: false, Error: err.message });
   }
 });
+
+// API: Thống kê số lượng user, tổng lương, số nhân viên đạt A/B/C theo category
+router.get('/category_stats', async (req, res) => {
+  try {
+    // Số lượng user và tổng lương từng category
+    const [catStats] = await pool.query(`
+      SELECT 
+        c.id AS category_id,
+        c.name AS category_name,
+        COUNT(e.id) AS employee_count,
+        IFNULL(SUM(e.salary),0) AS total_salary
+      FROM category c
+      LEFT JOIN employee e ON e.category_id = c.id
+      GROUP BY c.id, c.name
+    `);
+
+    // Số nhân viên đạt A/B/C từng category (lấy xếp loại mới nhất)
+    const [gradeStats] = await pool.query(`
+      SELECT 
+        c.id AS category_id,
+        ee.type,
+        COUNT(DISTINCT ee.employee_id) AS count
+      FROM category c
+      LEFT JOIN employee e ON e.category_id = c.id
+      LEFT JOIN (
+        SELECT t1.*
+        FROM employee_evaluations t1
+        INNER JOIN (
+          SELECT employee_id, MAX(id) AS max_id
+          FROM employee_evaluations
+          GROUP BY employee_id
+        ) t2 ON t1.employee_id = t2.employee_id AND t1.id = t2.max_id
+      ) ee ON ee.employee_id = e.id
+      WHERE ee.type IS NOT NULL
+      GROUP BY c.id, ee.type
+    `);
+
+    // Gộp dữ liệu
+    const result = catStats.map(cat => {
+      const grades = { A: 0, B: 0, C: 0 };
+      gradeStats.forEach(g => {
+        if (g.category_id === cat.category_id && g.type) {
+          grades[g.type] = g.count;
+        }
+      });
+      return {
+        ...cat,
+        grade_A: grades.A,
+        grade_B: grades.B,
+        grade_C: grades.C
+      };
+    });
+
+    res.json({ Status: true, Result: result });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+router.post('/update_employee_schedule', async (req, res) => {
+  try {
+    const { employee_id, schedules } = req.body;
+    // Xóa lịch cũ của nhân viên trong tháng
+    await pool.query(
+      "DELETE FROM work_schedules WHERE employee_id = ? AND MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())",
+      [employee_id]
+    );
+    // Thêm lịch mới
+    if (schedules.length > 0) {
+      const values = schedules.map(item => [employee_id, item.date, item.shift]);
+      await pool.query(
+        "INSERT INTO work_schedules (employee_id, date, shift) VALUES ?",
+        [values]
+      );
+    }
+    res.json({ Status: true });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+router.get('/employee_report/:employee_id', async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    const [result] = await pool.query(
+      "SELECT report FROM reports WHERE employee_id = ? ORDER BY date DESC LIMIT 1",
+      [employee_id]
+    );
+    if (result.length > 0) {
+      res.json({ Status: true, Report: result[0].report });
+    } else {
+      res.json({ Status: false, Error: "No report found" });
+    }
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+router.post('/leave_request', async (req, res) => {
+  try {
+    const { employee_id, date, reason } = req.body;
+    await pool.query(
+      "INSERT INTO leave_requests (employee_id, date, reason, status) VALUES (?, ?, ?, 'pending')",
+      [employee_id, date, reason]
+    );
+    res.json({ Status: true, Message: "Leave request submitted" });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+router.get('/leave_requests', async (req, res) => {
+  try {
+    const [result] = await pool.query(`
+      SELECT lr.*, e.name FROM leave_requests lr
+      JOIN employee e ON e.id = lr.employee_id
+      ORDER BY lr.date DESC
+    `);
+    res.json({ Status: true, Result: result });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+// API: Lấy lịch làm việc của 1 nhân viên
+router.get('/work_schedule/:id', async (req, res) => {
+  const employee_id = req.params.id;
+  try {
+    const [result] = await pool.query(
+      "SELECT * FROM work_schedules WHERE employee_id = ? ORDER BY date ASC",
+      [employee_id]
+    );
+    res.json({ Status: true, Result: result });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
 
 export { router as adminRouter };

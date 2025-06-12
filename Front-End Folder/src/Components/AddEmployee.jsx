@@ -29,7 +29,11 @@ const AddEmployee = () => {
   }, []);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!employee.category_id) {
+      alert("Please select a category!");
+      return;
+    }
     const formData = new FormData();
     formData.append('name', employee.name);
     formData.append('email', employee.email);
@@ -44,7 +48,7 @@ const AddEmployee = () => {
         if(result.data.Status) {
             navigate('/dashboard/employee')
         } else {
-            alert(result.data.Error)
+            alert(typeof result.data.Error === "string" ? result.data.Error : JSON.stringify(result.data.Error))
         }
     })
     .catch(err => console.log(err))
@@ -130,11 +134,20 @@ const AddEmployee = () => {
             <label for="category" className="form-label">
               Category
             </label>
-            <select name="category" id="category" className="form-select"
-                onChange={(e) => setEmployee({...employee, category_id: e.target.value})}>
-              {category.map((c) => {
-                return <option value={c.id}>{c.name}</option>;
-              })}
+            <select
+              name="category"
+              id="category"
+              className="form-select"
+              value={employee.category_id}
+              onChange={(e) => setEmployee({ ...employee, category_id: e.target.value })}
+              required
+            >
+              <option value="">-- Select Category --</option>
+              {category.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="col-12 mb-3">

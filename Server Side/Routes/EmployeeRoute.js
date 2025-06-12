@@ -90,14 +90,24 @@ EmployeeRouter.post('/add_report', async (req, res) => {
                 // Ghép nội dung báo cáo (chỉ lấy báo cáo mới nhất)
                 const reportsText = latestReport[0].report;
                 const prompt = `
-You are an HR expert. Based on the following employee's report, evaluate their performance as a percentage (0-100%), and provide a short justification.
-Return JSON: { "performance_percent": ..., "comment": "..." }
+You are an HR expert. Based on the following employee's report, please:
+1. Evaluate the employee's performance as a percentage (0-100%).
+2. Provide a short comment about their performance.
+3. Suggest a course or skill for the employee to develop further.
+
+Return JSON:
+{
+  "performance_percent": ...,
+  "comment": "...",
+  "suggestion": "..."
+}
 Report:
 ${reportsText}
 `;
-                // Gọi AI, nếu lỗi thì dùng giá trị mặc định
+
                 let performance_percent = 80;
                 let comment = "Good job";
+                let suggestion = "Consider improving communication skills.";
                 try {
                     const client = new OpenAI({ baseURL: endpoint, apiKey: process.env.OPENAI_API_KEY });
                     const response = await client.chat.completions.create({
@@ -119,10 +129,12 @@ ${reportsText}
                     const aiData = JSON.parse(content);
                     performance_percent = aiData.performance_percent;
                     comment = aiData.comment;
+                    suggestion = aiData.suggestion;
                 } catch (e) {
                     console.error("AI error:", e);
                     performance_percent = 80;
                     comment = "AI service unavailable. Default evaluation applied.";
+                    suggestion = "Consider improving communication skills.";
                 }
                 // Xếp loại và tính thưởng
                 let type = "C";
@@ -139,8 +151,8 @@ ${reportsText}
                 const bonus_salary = emp.length ? Math.round(emp[0].salary * bonus_percent) : 0;
                 // Lưu kết quả vào DB
                 await pool.query(
-                    "INSERT INTO employee_evaluations (employee_id, type, performance_percent, bonus_salary, comment) VALUES (?, ?, ?, ?, ?)",
-                    [employee_id, type, performance_percent, bonus_salary, comment]
+                    "INSERT INTO employee_evaluations (employee_id, type, performance_percent, bonus_salary, comment, suggestion) VALUES (?, ?, ?, ?, ?, ?)",
+                    [employee_id, type, performance_percent, bonus_salary, comment, suggestion]
                 );
             }
         }
@@ -149,5 +161,38 @@ ${reportsText}
     } catch (err) {
         return res.json({ Status: false, Error: err.message });
     }
+});
+
+EmployeeRouter.get('/profile/:id', async (req, res) => {
+  const employee_id = req.params.id;
+  // Lấy thông tin employee
+  const [empRows] = await pool.query("SELECT * FROM employee WHERE id = ?", [employee_id]);
+  if (!empRows.length) return res.json({ Status: false, Error: "Employee not found" });
+
+  // Lấy bonus_salary mới nhất
+  const [evalRows] = await pool.query(
+    "SELECT bonus_salary FROM employee_evaluations WHERE employee_id = ? ORDER BY id DESC LIMIT 1",
+    [employee_id]
+  );
+  const bonus_salary = evalRows.length ? evalRows[0].bonus_salary : 0;
+
+  res.json({
+    Status: true,
+    Result: {
+      ...empRows[0],
+      bonus_salary
+    }
+  });
+});
+
+EmployeeRouter.get('/evaluation_types', async (req, res) => {
+  try {
+    const [result] = await pool.query(`
+      SELECT ee.id, ee.employee_id, ee.type FROM employee_evaluations ee
+    `);
+    return res.json({ Status: true, Result: result });
+  } catch (err) {
+    return res.json({ Status: false, Error: err.message });
+  }
 });
 

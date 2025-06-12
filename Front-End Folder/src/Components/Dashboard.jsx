@@ -61,15 +61,6 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Category</span>
                 </Link>
               </li>
-              <li className="w-100">
-                <Link
-                  to="/dashboard/profile"
-                  className="nav-link px-0 align-middle text-white"
-                >
-                  <i className="fs-4 bi-person ms-2"></i>
-                  <span className="ms-2 d-none d-sm-inline">Profile</span>
-                </Link>
-              </li>
                 <li className="w-100">
                 <Link
                   to="/dashboard/auto-schedule"
@@ -88,20 +79,31 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">AI Analyze</span>
                 </Link>
               </li>
-              <li className="w-100" onClick={handleLogout}>
-              <Link
+              <li className="w-100">
+                <Link
+                  to="/dashboard/leave_request"
                   className="nav-link px-0 align-middle text-white"
+                >
+                  <i className="fs-4 bi-envelope-open ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Leave Request</span>
+                </Link>
+              </li>
+              <li className="w-100">
+                <button
+                  className="nav-link px-0 align-middle text-white bg-transparent border-0 w-100 text-start"
+                  onClick={handleLogout}
+                  style={{ cursor: "pointer" }}
                 >
                   <i className="fs-4 bi-power ms-2"></i>
                   <span className="ms-2 d-none d-sm-inline">Logout</span>
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
         </div>
         <div className="col p-0 m-0">
-            <div className="p-2 d-flex justify-content-center shadow">
-                <h4>HR Management System</h4>
+            <div className="p-2 d-flex justify-content-between align-items-center shadow">
+                <h4 className="m-0">HR Management System</h4>
             </div>
             <Outlet />
         </div>

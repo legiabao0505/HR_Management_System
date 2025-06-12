@@ -19,8 +19,7 @@ const Category = () => {
   return (
     <div className='px-5 mt-3'>
         <div className='d-flex justify-content-center'>
-            <h3>Cetegory List</h3>
-        </div>
+        <h3 style={{ color: "#1ea69a", fontWeight: 700, letterSpacing: 1 }}>CATEGORY LIST</h3>        </div>
         <Link to="/dashboard/add_category" className='btn btn-success'>Add Cetegory</Link>
         <div className='mt-3'>
             <table className='table'>

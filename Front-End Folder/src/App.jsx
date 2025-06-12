@@ -6,7 +6,6 @@ import Dashboard from './Components/Dashboard'
 import Home from './Components/Home'
 import Employee from './Components/Employee'
 import Category from './Components/Category'
-import Profile from './Components/Profile'
 import AddCategory from './Components/AddCategory'
 import AddEmployee from './Components/AddEmployee'
 import EditEmployee from './Components/EditEmployee'
@@ -19,6 +18,8 @@ import EmployeeSchedule from './Components/EmployeeSchedule'
 import EditProfile from './Components/EditProfile'
 import EmployeeReports from './Components/EmployeeReports'
 import AIAnalyze from './Components/AIAnalyze'
+import LeaveRequest from './Components/LeaveRequest';
+import React from "react";
 
 function App() {
   return (
@@ -40,12 +41,12 @@ function App() {
           <Route path='' element={<Home />} />
           <Route path='employee' element={<Employee />} />
           <Route path='category' element={<Category />} />
-          <Route path='profile' element={<Profile />} />
           <Route path='add_category' element={<AddCategory />} />
           <Route path='add_employee' element={<AddEmployee />} />
           <Route path='edit_employee/:id' element={<EditEmployee />} />
           <Route path='auto-schedule' element={<AutoSchedule />} />
           <Route path='ai-analyze' element={<AIAnalyze />} />
+          <Route path='leave_request' element={<LeaveRequest />} /> {/* <-- Đúng */}
         </Route>
       </Routes>
     </BrowserRouter>
