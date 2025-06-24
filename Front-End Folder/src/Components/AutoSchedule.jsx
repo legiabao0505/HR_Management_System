@@ -88,22 +88,22 @@ const AutoSchedule = () => {
     setEditSchedules([...schedules]); // clone để edit
     setShowEditModal(true);
   };
-
   return (
     <div className="auto-schedule-bg">
-      <div className="d-flex justify-content-center align-items-center mb-3">
-      <h3 className="auto-schedule-title">AUTO SCHEDULE</h3>      
-      </div>
-      <button className="btn btn-success" style={{ marginLeft: 50 }} onClick={handleAutoSchedule}>
-        Auto Schedule
-      </button>
-      {message && <div style={{ margin: "16px 0", color: "#1ea69a" }}>{message}</div>}
+      <div className="px-5 mt-3">
+        <div className="card enhanced-card">
+          <div className="card-header">
+            <h3 className="d-flex justify-content-center align-items-center mb-0 auto-schedule-title">AUTO SCHEDULE</h3>
+          </div>
+          <div className="card-body">
+            <button className="btn btn-success mb-3" onClick={handleAutoSchedule}>
+              Auto Schedule
+            </button>      {message && <div style={{ margin: "16px 0", color: "#1ea69a" }}>{message}</div>}
 
       <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
         <input
           type="text"
           className="form-control w-25"
-          style={{ marginLeft: 50 }}
           placeholder="Search by name or ID..."
           value={search}
           onChange={e => {
@@ -111,9 +111,7 @@ const AutoSchedule = () => {
             setPage(1);
           }}
         />
-      </div>
-
-      <table className="table table-bordered auto-schedule-table">
+      </div><table className="table table-bordered enhanced-table auto-schedule-table">
         <thead>
           <tr>
             <th style={{width: 60}}>ID</th>
@@ -357,10 +355,12 @@ const AutoSchedule = () => {
               >
                 Save
               </button>
-            </div>
-          </div>
+            </div>          </div>
         </div>
       )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

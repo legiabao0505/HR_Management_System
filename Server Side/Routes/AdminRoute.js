@@ -69,7 +69,7 @@ const upload = multer({
 
 router.post('/add_employee', upload.single('image'), async (req, res) => {
   const sql = `INSERT INTO employee 
-    (name,email,password, address, salary,image, category_id) 
+    (name,email,password, address, phone, salary,image, category_id) 
     VALUES (?)`;
   try {
     const hash = await bcrypt.hash(req.body.password, 10);
@@ -78,6 +78,7 @@ router.post('/add_employee', upload.single('image'), async (req, res) => {
       req.body.email,
       hash,
       req.body.address,
+      req.body.phone,
       req.body.salary, 
       req.file.filename,
       req.body.category_id
@@ -160,13 +161,14 @@ router.get('/employee/:id', async (req, res) => {
 router.put('/edit_employee/:id', async (req, res) => {
   const id = req.params.id;
   const sql = `UPDATE employee 
-    set name = ?, email = ?, salary = ?, address = ?, category_id = ? 
+    set name = ?, email = ?, salary = ?, address = ?, phone = ?, category_id = ? 
     Where id = ?`
   const values = [
     req.body.name,
     req.body.email,
     req.body.salary,
     req.body.address,
+    req.body.phone,
     req.body.category_id
   ]
   try {
@@ -174,6 +176,26 @@ router.put('/edit_employee/:id', async (req, res) => {
     return res.json({Status: true, Result: result});
   } catch (err) {
     return res.json({Status: false, Error: "Query Error"+err});
+  }
+});
+
+// Edit Employee Profile (only name, email, phone, address)
+router.put('/edit_employee_profile/:id', async (req, res) => {
+  const id = req.params.id;
+  const sql = `UPDATE employee 
+    set name = ?, email = ?, phone = ?, address = ?
+    Where id = ?`
+  const values = [
+    req.body.name,
+    req.body.email,
+    req.body.phone,
+    req.body.address
+  ]
+  try {
+    const [result] = await pool.query(sql, [...values, id]);
+    return res.json({Status: true, Result: result});
+  } catch (err) {
+    return res.json({Status: false, Error: "Query Error: " + err.message});
   }
 });
 
@@ -464,10 +486,10 @@ router.get('/employee_report/:employee_id', async (req, res) => {
 
 router.post('/leave_request', async (req, res) => {
   try {
-    const { employee_id, date, reason } = req.body;
+    const { employee_id, date, to_date, reason } = req.body;
     await pool.query(
-      "INSERT INTO leave_requests (employee_id, date, reason, status) VALUES (?, ?, ?, 'pending')",
-      [employee_id, date, reason]
+      "INSERT INTO leave_requests (employee_id, from_date, to_date, reason, status) VALUES (?, ?, ?, ?, 'pending')",
+      [employee_id, date, to_date || null, reason]
     );
     res.json({ Status: true, Message: "Leave request submitted" });
   } catch (err) {
@@ -476,11 +498,10 @@ router.post('/leave_request', async (req, res) => {
 });
 
 router.get('/leave_requests', async (req, res) => {
-  try {
-    const [result] = await pool.query(`
+  try {    const [result] = await pool.query(`
       SELECT lr.*, e.name FROM leave_requests lr
       JOIN employee e ON e.id = lr.employee_id
-      ORDER BY lr.date DESC
+      ORDER BY lr.from_date DESC
     `);
     res.json({ Status: true, Result: result });
   } catch (err) {
@@ -502,5 +523,20 @@ router.get('/work_schedule/:id', async (req, res) => {
   }
 });
 
+// API: Cập nhật trạng thái leave request (approve/reject)
+router.put('/leave_request/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'approved' hoặc 'rejected'
+    
+    await pool.query(
+      "UPDATE leave_requests SET status = ? WHERE id = ?",
+      [status, id]
+    );
+    res.json({ Status: true, Message: `Leave request ${status} successfully` });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
 
 export { router as adminRouter };

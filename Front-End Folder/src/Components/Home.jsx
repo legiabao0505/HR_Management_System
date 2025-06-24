@@ -1,6 +1,6 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar, Line, Pie, Scatter } from "react-chartjs-2";
 import "chart.js/auto";
 
 const Home = () => {
@@ -71,58 +71,260 @@ const Home = () => {
 
       {/* Statistics Charts */}
       <div className="container mt-4">
-        <h5 className="mb-3">NUMBER OF EMPLOYEES PER DEPARTMENT</h5>
+        <h5 className="mb-3">NUMBER OF EMPLOYEES PER DEPARTMENT</h5>        <div className="chart-container">
+          <Bar
+            data={{
+              labels,
+              datasets: [
+                { 
+                  label: "Number of Employees", 
+                  data: employeeCountByCat, 
+                  backgroundColor: "rgba(30, 166, 154, 0.8)",
+                  borderColor: "#1ea69a",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  borderSkipped: false,
+                }
+              ]
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top',
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(30, 166, 154, 0.9)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  borderColor: '#1ea69a',
+                  borderWidth: 1,
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                  }
+                },
+                x: {
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                  }
+                }
+              }
+            }}
+            height={220}
+          />
+        </div><h5 className="mt-5 mb-3">TOTAL SALARY PER DEPARTMENT</h5>
         <div className="chart-container">
           <Bar
             data={{
               labels,
               datasets: [
-                { label: "Number of Employees", data: employeeCountByCat, backgroundColor: "#1ea69a" }
+                { 
+                  label: "Total Salary ($)", 
+                  data: totalSalaryByCat, 
+                  backgroundColor: "rgba(38, 208, 206, 0.8)",
+                  borderColor: "#26d0ce",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  borderSkipped: false,
+                }
               ]
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top',
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(30, 166, 154, 0.9)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  borderColor: '#1ea69a',
+                  borderWidth: 1,
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                    callback: function(value) {
+                      return '$' + value.toLocaleString();
+                    }
+                  }
+                },
+                x: {
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                  }
+                }
+              }
             }}
             height={220}
           />
         </div>
-        <h5 className="mt-5 mb-3">TOTAL SALARY PER DEPARTMENT</h5>
-        <div className="chart-container">
-          <Bar
+        <h5 className="mt-5 mb-3">PERFORMANCE</h5>        <div className="chart-container">
+          <Line
             data={{
               labels,
               datasets: [
-                { label: "Total Salary", data: totalSalaryByCat, backgroundColor: "#26d0ce" }
+                { 
+                  label: "Grade A", 
+                  data: gradeA, 
+                  backgroundColor: "rgba(40, 167, 69, 0.2)",
+                  borderColor: "#28a745",
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointBackgroundColor: "#28a745",
+                  pointBorderColor: "#fff",
+                  pointBorderWidth: 2,
+                  pointRadius: 6,
+                },
+                { 
+                  label: "Grade B", 
+                  data: gradeB, 
+                  backgroundColor: "rgba(255, 193, 7, 0.2)",
+                  borderColor: "#ffc107",
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointBackgroundColor: "#ffc107",
+                  pointBorderColor: "#fff",
+                  pointBorderWidth: 2,
+                  pointRadius: 6,
+                },
+                { 
+                  label: "Grade C", 
+                  data: gradeC, 
+                  backgroundColor: "rgba(220, 53, 69, 0.2)",
+                  borderColor: "#dc3545",
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                  pointBackgroundColor: "#dc3545",
+                  pointBorderColor: "#fff",
+                  pointBorderWidth: 2,
+                  pointRadius: 6,
+                }
               ]
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top',
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(30, 166, 154, 0.9)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  borderColor: '#1ea69a',
+                  borderWidth: 1,
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                  }
+                },
+                x: {
+                  grid: {
+                    color: 'rgba(30, 166, 154, 0.1)',
+                  },
+                  ticks: {
+                    color: '#1ea69a',
+                  }
+                }
+              }
             }}
             height={220}
           />
         </div>
-        <h5 className="mt-5 mb-3">PERFORMANCE</h5>
-        <div className="chart-container">
-          <Bar
-            data={{
-              labels,
-              datasets: [
-                { label: "A", data: gradeA, backgroundColor: "#28a745" },
-                { label: "B", data: gradeB, backgroundColor: "#ffc107" },
-                { label: "C", data: gradeC, backgroundColor: "#dc3545" }
-              ]
-            }}
-            height={220}
-            options={{ scales: { x: { stacked: true }, y: { stacked: true } } }}
-          />
-        </div>
-        <div className="chart-container mt-5">
-          <h5 className="mb-3">EMPLOYEE PERFORMANCE RATIO</h5>
+          <h5 className="mt-5 mb-3">EMPLOYEE PERFORMANCE RATIO</h5>          <div className="chart-container mt-5">
           <Pie
             data={{
-              labels: ["A", "B", "C"],
+              labels: ["Grade A", "Grade B", "Grade C"],
               datasets: [{
                 data: [
                   categoryStats.reduce((sum, c) => sum + c.grade_A, 0),
                   categoryStats.reduce((sum, c) => sum + c.grade_B, 0),
                   categoryStats.reduce((sum, c) => sum + c.grade_C, 0)
                 ],
-                backgroundColor: ["#28a745", "#ffc107", "#dc3545"]
+                backgroundColor: [
+                  "rgba(40, 167, 69, 0.8)",
+                  "rgba(255, 193, 7, 0.8)", 
+                  "rgba(220, 53, 69, 0.8)"
+                ],
+                borderColor: [
+                  "#28a745",
+                  "#ffc107",
+                  "#dc3545"
+                ],
+                borderWidth: 3,
+                hoverBackgroundColor: [
+                  "rgba(40, 167, 69, 0.9)",
+                  "rgba(255, 193, 7, 0.9)",
+                  "rgba(220, 53, 69, 0.9)"
+                ],
+                hoverBorderWidth: 4,
               }]
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom',
+                  labels: {
+                    padding: 20,
+                    color: '#1ea69a',
+                    font: {
+                      size: 14,
+                      weight: 'bold'
+                    }
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(30, 166, 154, 0.9)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  borderColor: '#1ea69a',
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                      const percentage = ((context.parsed / total) * 100).toFixed(1);
+                      return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                    }
+                  }
+                }
+              }
             }}
             height={180}
           />

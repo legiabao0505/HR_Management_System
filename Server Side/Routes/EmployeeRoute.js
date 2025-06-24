@@ -196,3 +196,31 @@ EmployeeRouter.get('/evaluation_types', async (req, res) => {
   }
 });
 
+// API: Employee submit leave request
+EmployeeRouter.post('/leave_request', async (req, res) => {
+  try {
+    const { employee_id, date, to_date, reason } = req.body;
+    await pool.query(
+      "INSERT INTO leave_requests (employee_id, from_date, to_date, reason, status) VALUES (?, ?, ?, ?, 'pending')",
+      [employee_id, date, to_date || null, reason]
+    );
+    res.json({ Status: true, Message: "Leave request submitted successfully" });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+
+// API: Lấy leave requests của 1 employee
+EmployeeRouter.get('/leave_requests/:employee_id', async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    const [result] = await pool.query(
+      "SELECT * FROM leave_requests WHERE employee_id = ? ORDER BY created_at DESC",
+      [employee_id]
+    );
+    res.json({ Status: true, Result: result });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+

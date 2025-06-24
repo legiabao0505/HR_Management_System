@@ -2,7 +2,6 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link, Outlet, useLocation } from 'react-router-dom'
 import EmployeeProfile from './EmployeeProfile'
-import EmployeeReports from './EmployeeReports'
 
 const EmployeeDetail = () => {
   const [employee, setEmployee] = useState({})
@@ -33,9 +32,9 @@ const EmployeeDetail = () => {
       <div className="row flex-nowrap">
         {/* Sidebar */}
         <div className="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark min-vh-100">
-          <div className="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
-            <span className="fs-5 fw-bolder d-none d-sm-inline mb-4 mt-3">Employee Dashboard</span>
-            <ul className="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+          <div className="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white" >
+            <span className="fs-5 fw-bolder d-none d-sm-inline mb-4 mt-3" >Employee Dashboard</span>
+            <ul className="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"  id="menu">
               <li className="w-100">
                 <Link
                   to={`/employee_detail/${id}`}
@@ -63,6 +62,15 @@ const EmployeeDetail = () => {
                   <span className="ms-2 d-none d-sm-inline">Reports</span>
                 </Link>
               </li>
+              <li className="w-100">
+                <Link
+                  to={`/employee_detail/${id}/leave_request`}
+                  className={`nav-link px-0 align-middle text-white${location.pathname.includes('leave_request') ? ' active' : ''}`}
+                >
+                  <i className="fs-5 bi-calendar-plus ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Leave Request</span>
+                </Link>
+              </li>
               <li className="w-100" onClick={handleLogout}>
                 <span className="nav-link px-0 align-middle text-white" style={{ cursor: "pointer" }}>
                   <i className="fs-5 bi-power ms-2"></i>
@@ -76,12 +84,9 @@ const EmployeeDetail = () => {
         <div className="col p-0 m-0">
           <div className="p-2 d-flex justify-content-center shadow">
             <h4>HR Management System</h4>
-          </div>
-          {/* Nếu là trang profile thì hiển thị profile, nếu là schedule thì Outlet sẽ render lịch */}
+          </div>          {/* Nếu là trang profile thì hiển thị profile, nếu không thì sử dụng Outlet cho nested routes */}
           {location.pathname === `/employee_detail/${id}` ? (
             <EmployeeProfile employee={employee} />
-          ) : location.pathname.includes('reports') ? (
-            <EmployeeReports employeeId={id} />
           ) : (
             <Outlet />
           )}

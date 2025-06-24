@@ -18,7 +18,8 @@ import EmployeeSchedule from './Components/EmployeeSchedule'
 import EditProfile from './Components/EditProfile'
 import EmployeeReports from './Components/EmployeeReports'
 import AIAnalyze from './Components/AIAnalyze'
-import LeaveRequest from './Components/LeaveRequest';
+import LeaveManagement from './Components/LeaveManagement'
+import LeaveRequest from './Components/LeaveRequest'
 import React from "react";
 
 function App() {
@@ -27,11 +28,11 @@ function App() {
       <Routes>
         <Route path='/' element={<Start />} />
         <Route path='/adminlogin' element={<Login />} />
-        <Route path='/employee_login' element={<EmployeeLogin />} />
-        <Route path='/employee_detail/:id' element={<EmployeeDetail />}>
+        <Route path='/employee_login' element={<EmployeeLogin />} />        <Route path='/employee_detail/:id' element={<EmployeeDetail />}>
           <Route path='edit' element={<EditProfile />} />
           <Route path='schedule' element={<EmployeeSchedule />} />
           <Route path='reports' element={<EmployeeReportsWrapper />} />
+          <Route path='leave_request' element={<LeaveRequestWrapper />} />
         </Route>
         <Route path='/dashboard' element={
           <PrivateRoute>
@@ -41,12 +42,10 @@ function App() {
           <Route path='' element={<Home />} />
           <Route path='employee' element={<Employee />} />
           <Route path='category' element={<Category />} />
-          <Route path='add_category' element={<AddCategory />} />
-          <Route path='add_employee' element={<AddEmployee />} />
-          <Route path='edit_employee/:id' element={<EditEmployee />} />
-          <Route path='auto-schedule' element={<AutoSchedule />} />
+          <Route path='add_category' element={<AddCategory />} />          <Route path='add_employee' element={<AddEmployee />} />
+          <Route path='edit_employee/:id' element={<EditEmployee />} />          <Route path='auto-schedule' element={<AutoSchedule />} />
           <Route path='ai-analyze' element={<AIAnalyze />} />
-          <Route path='leave_request' element={<LeaveRequest />} /> {/* <-- Đúng */}
+          <Route path='leave_management' element={<LeaveManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>
@@ -60,5 +59,10 @@ function EmployeeReportsWrapper() {
   return <EmployeeReports employeeId={id} />;
 }
 
+// Wrapper to get employeeId from URL params and pass to LeaveRequest
+function LeaveRequestWrapper() {
+  const { id } = useParams();
+  return <LeaveRequest employeeId={id} />;
+}
 
 export default App

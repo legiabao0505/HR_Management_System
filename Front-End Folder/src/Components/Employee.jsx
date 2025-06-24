@@ -47,16 +47,17 @@ const Employee = () => {
         }
       });
   };
-
   return (
     <div className="px-5 mt-3">
-      <div className="d-flex justify-content-center align-items-center mb-3">
-        <h3 style={{ color: "#1ea69a", fontWeight: 700, letterSpacing: 1 }}>
-          EMPLOYEE LIST
-        </h3>
-      </div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="d-flex align-items-center gap-2">
+      <div className="card enhanced-card">
+        <div className="card-header">
+          <h3 className="d-flex justify-content-center align-items-center mb-0">
+            EMPLOYEE LIST
+          </h3>
+        </div>
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex align-items-center gap-2">
           <input
             type="text"
             className="form-control w-25"
@@ -87,15 +88,14 @@ const Employee = () => {
         <Link to="/dashboard/add_employee" className="btn btn-success">
           Add Employee
         </Link>
-      </div>
-      <div className="mt-3">
-        <table className="table">
-          <thead>
+      </div>      <div className="mt-3">
+        <table className="table enhanced-table">          <thead>
             <tr>
               <th>Name</th>
               <th>Image</th>
               <th>Email</th>
               <th>Address</th>
+              <th>Phone</th>
               <th>Salary ($)</th>
               <th>Action</th>
             </tr>
@@ -110,9 +110,9 @@ const Employee = () => {
                     className="employee_image"
                     alt="Employee"
                   />
-                </td>
-                <td>{e.email}</td>
+                </td>                <td>{e.email}</td>
                 <td>{e.address}</td>
+                <td>{e.phone || 'Not provided'}</td>
                 <td>{e.salary} $</td>
                 <td>
                   <Link
@@ -146,12 +146,12 @@ const Employee = () => {
           </span>
           <button
             className="btn btn-primary ms-2"
-            disabled={page >= Math.ceil(total / limit)}
-            onClick={() => setPage(page + 1)}
-          >
+            disabled={page >= Math.ceil(total / limit)}            onClick={() => setPage(page + 1)}          >
             Next
           </button>
         </div>
+        </div>
+      </div>
       </div>
     </div>
   );

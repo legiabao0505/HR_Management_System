@@ -1,0 +1,4 @@
+# Bỏ qua node_modules và file môi trường khi đẩy lên git
+node_modules/
+.env
+.env.*

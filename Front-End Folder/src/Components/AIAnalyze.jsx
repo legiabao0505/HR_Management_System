@@ -81,13 +81,16 @@ const AIAnalyze = () => {
     setSelectedReport("");
     setSelectedSuggestion(""); // Clear suggestion on close
   };
-
   return (
     <div className="container mt-4">
-      <h3 style={{ color: "#1ea69a", fontWeight: 700, letterSpacing: 1,textAlign: "center" }}>
-        AI EMPLOYEE EVALUATION RESULTS
-      </h3>
-      <form className="mb-3 d-flex justify-content-between align-items-center" onSubmit={handleSearch}>
+      <div className="card enhanced-card">
+        <div className="card-header">
+          <h3 className="d-flex justify-content-center mb-0">
+            AI EMPLOYEE EVALUATION RESULTS
+          </h3>
+        </div>
+        <div className="card-body">
+          <form className="mb-3 d-flex justify-content-between align-items-center" onSubmit={handleSearch}>
   <div className="d-flex" style={{ flex: 1 }}>
     <input
       type="text"
@@ -128,9 +131,8 @@ const AIAnalyze = () => {
   </div>
 </form>
       {loading && <div>Loading evaluations...</div>}
-      {error && <div style={{ color: "red" }}>{error}</div>}
-      <div className="table-responsive">
-        <table className="table table-bordered align-middle" id="ai-eval-table">
+      {error && <div style={{ color: "red" }}>{error}</div>}      <div className="table-responsive">
+        <table className="table table-bordered enhanced-table align-middle" id="ai-eval-table">
           <thead className="table-light">
             <tr>
               <th>Employee ID</th>
@@ -258,10 +260,11 @@ const AIAnalyze = () => {
               <button className="btn btn-secondary" onClick={handleCloseDetail}>
                 Close
               </button>
-            </div>
-          </div>
+            </div>          </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -21,14 +21,11 @@ const EmployeeSchedule = () => {
               endHour = 12;
             const shift = (item.shift || "").toLowerCase();
             if (shift === "morning") {
-              startHour = 8;
-              endHour = 12;
-            } else if (shift === "afternoon") {
-              startHour = 13;
-              endHour = 17;
+              startHour = 6;
+              endHour = 18;
             } else if (shift === "night") {
               startHour = 18;
-              endHour = 22;
+              endHour = 6;
             }
             return {
               title: shift.charAt(0).toUpperCase() + shift.slice(1) + " Shift",

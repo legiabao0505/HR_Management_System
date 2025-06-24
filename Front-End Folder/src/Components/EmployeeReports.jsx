@@ -39,7 +39,7 @@ const EmployeeReports = ({ employeeId }) => {
 
   return (
     <div className="container mt-4">
-      <h2>Enter Your Report</h2>
+      <h3>Enter Your Report</h3>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <textarea

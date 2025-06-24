@@ -25,7 +25,7 @@ const Dashboard = () => {
               className="d-flex align-items-center pb-3 mb-md-1 mt-md-3 me-md-auto text-white text-decoration-none"
             >
               <span className="fs-5 fw-bolder d-none d-sm-inline">
-                HR Management System
+                Admin Dashboard
               </span>
             </Link>
             <ul
@@ -75,17 +75,15 @@ const Dashboard = () => {
                   to="/dashboard/ai-analyze"
                   className="nav-link px-0 align-middle text-white"
                 >
-                  <i className="fs-4 bi-bar-chart-line ms-2"></i>
-                  <span className="ms-2 d-none d-sm-inline">AI Analyze</span>
+                  <i className="fs-4 bi-bar-chart-line ms-2"></i>                  <span className="ms-2 d-none d-sm-inline">AI Analyze</span>
                 </Link>
-              </li>
-              <li className="w-100">
+              </li>              <li className="w-100">
                 <Link
-                  to="/dashboard/leave_request"
+                  to="/dashboard/leave_management"
                   className="nav-link px-0 align-middle text-white"
                 >
-                  <i className="fs-4 bi-envelope-open ms-2"></i>
-                  <span className="ms-2 d-none d-sm-inline">Leave Request</span>
+                  <i className="fs-4 bi-calendar-check ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Leave Management</span>
                 </Link>
               </li>
               <li className="w-100">
@@ -103,7 +101,7 @@ const Dashboard = () => {
         </div>
         <div className="col p-0 m-0">
             <div className="p-2 d-flex justify-content-between align-items-center shadow">
-                <h4 className="m-0">HR Management System</h4>
+                <h3 className="m-0">HR Management System</h3>
             </div>
             <Outlet />
         </div>
