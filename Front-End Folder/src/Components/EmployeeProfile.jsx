@@ -47,7 +47,8 @@ const EmployeeProfile = () => {
                 </h3>
               </div>
               
-              <div className="employee-profile-body">                <div className="employee-image-section">
+              <div className="employee-profile-body">
+                <div className="employee-image-section">
                   <div className="employee-image-wrapper">
                     <img
                       src={`http://localhost:3000/Images/${employee.image}`}
@@ -62,11 +63,11 @@ const EmployeeProfile = () => {
                       <i className="bi bi-person-fill"></i>
                     </div>
                   </div>
-
                 </div>
 
                 <div className="employee-info-section">
-                  <div className="employee-info-grid">                    <div className="employee-info-item">
+                  <div className="employee-info-grid">
+                    <div className="employee-info-item">
                       <div className="info-label">
                         <i className="bi bi-person-badge me-2"></i>
                         Employee ID

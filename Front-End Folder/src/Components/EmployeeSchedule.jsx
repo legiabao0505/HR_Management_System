@@ -42,15 +42,17 @@ const EmployeeSchedule = () => {
   const localizer = momentLocalizer(moment);
 
   return (
-    <div className="container mt-4">
-      <h3 className="mb-3">Your Work Schedule</h3>
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 500 }}
-      />
+    <div className="schedule-container">
+      <div className="schedule-card">
+        <h3 className="schedule-title">Your Work Schedule</h3>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 500, background: 'transparent', borderRadius: 12 }}
+        />
+      </div>
     </div>
   );
 };

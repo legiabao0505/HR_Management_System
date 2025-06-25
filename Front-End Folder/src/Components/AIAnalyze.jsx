@@ -99,7 +99,7 @@ const AIAnalyze = () => {
       value={search}
       onChange={(e) => setSearch(e.target.value)}
     />
-    <button className="btn btn-primary" type="submit">
+    <button className="btn btn-primary" type="submit" >
       Search
     </button>
   </div>

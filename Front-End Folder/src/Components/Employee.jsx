@@ -91,6 +91,7 @@ const Employee = () => {
       </div>      <div className="mt-3">
         <table className="table enhanced-table">          <thead>
             <tr>
+              <th>Employee ID</th>
               <th>Name</th>
               <th>Image</th>
               <th>Email</th>
@@ -103,6 +104,7 @@ const Employee = () => {
           <tbody>
             {employee.map((e) => (
               <tr key={e.id}>
+                <td>{e.id}</td>
                 <td>{e.name}</td>
                 <td>
                   <img

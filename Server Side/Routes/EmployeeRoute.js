@@ -224,3 +224,17 @@ EmployeeRouter.get('/leave_requests/:employee_id', async (req, res) => {
   }
 });
 
+// API: Lấy danh sách reports của employee
+EmployeeRouter.get('/reports/:employee_id', async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    const [result] = await pool.query(
+      "SELECT * FROM reports WHERE employee_id = ? ORDER BY date DESC",
+      [employee_id]
+    );
+    res.json({ Status: true, Result: result });
+  } catch (err) {
+    res.json({ Status: false, Error: err.message });
+  }
+});
+

@@ -158,19 +158,37 @@ router.get('/employee/:id', async (req, res) => {
   }
 });
 
-router.put('/edit_employee/:id', async (req, res) => {
+router.put('/edit_employee/:id', upload.single('image'), async (req, res) => {
   const id = req.params.id;
+  // Parse category_id and salary as integer
+  const category_id = parseInt(req.body.category_id, 10);
+  const salary = parseInt(req.body.salary, 10);
+  if (isNaN(category_id) || isNaN(salary)) {
+    return res.json({ Status: false, Error: "category_id or salary error!" });
+  }
+
+  // Handle image update/removal
+  let imageField = '';
+  if (req.file && req.file.filename) {
+    imageField = req.file.filename;
+  } else if (req.body.oldImage) {
+    imageField = req.body.oldImage;
+  } else if (req.body.removeImage) {
+    imageField = '';
+  }
+
   const sql = `UPDATE employee 
-    set name = ?, email = ?, salary = ?, address = ?, phone = ?, category_id = ? 
-    Where id = ?`
+    set name = ?, email = ?, salary = ?, address = ?, phone = ?, category_id = ?, image = ?
+    Where id = ?`;
   const values = [
     req.body.name,
     req.body.email,
-    req.body.salary,
+    salary,
     req.body.address,
     req.body.phone,
-    req.body.category_id
-  ]
+    category_id,
+    imageField
+  ];
   try {
     const [result] = await pool.query(sql, [...values, id]);
     return res.json({Status: true, Result: result});
@@ -179,23 +197,31 @@ router.put('/edit_employee/:id', async (req, res) => {
   }
 });
 
-// Edit Employee Profile (only name, email, phone, address)
-router.put('/edit_employee_profile/:id', async (req, res) => {
+// Edit Employee Profile (with image update support)
+router.put('/edit_employee_profile/:id', upload.single('image'), async (req, res) => {
   const id = req.params.id;
-  const sql = `UPDATE employee 
-    set name = ?, email = ?, phone = ?, address = ?
-    Where id = ?`
-  const values = [
-    req.body.name,
-    req.body.email,
-    req.body.phone,
-    req.body.address
-  ]
+  const { name, phone, address } = req.body;
+  let imageFileName;
+
+  // Nếu có file mới thì dùng file mới, không thì dùng oldImage
+  if (req.file && req.file.filename) {
+    imageFileName = req.file.filename;
+  } else if (req.body.oldImage) {
+    imageFileName = req.body.oldImage;
+  } else {
+    // Lấy tên ảnh hiện tại từ DB nếu không có oldImage
+    const [rows] = await pool.query('SELECT image FROM employee WHERE id = ?', [id]);
+    imageFileName = rows.length ? rows[0].image : '';
+  }
+
   try {
-    const [result] = await pool.query(sql, [...values, id]);
-    return res.json({Status: true, Result: result});
+    await pool.query(
+      'UPDATE employee SET name = ?, phone = ?, address = ?, image = ? WHERE id = ?',
+      [name, phone, address, imageFileName, id]
+    );
+    return res.json({ Status: true, Message: 'Profile updated successfully!' });
   } catch (err) {
-    return res.json({Status: false, Error: "Query Error: " + err.message});
+    return res.json({ Status: false, Error: 'Query Error: ' + err.message });
   }
 });
 
@@ -308,7 +334,7 @@ router.post('/auto_schedule', async (req, res) => {
         lastWeek = current.isoWeek();
       }
 
-      if (dayOfWeek !== 7) { // Skip Sunday
+      if (dayOfWeek !== 7) // Skip Sunday
         for (let emp of employees) {
           let shift;
           if (emp.id % 2 === 1) { // Odd id
@@ -318,7 +344,6 @@ router.post('/auto_schedule', async (req, res) => {
           }
           schedule.push([emp.id, current.format('YYYY-MM-DD'), shift]);
         }
-      }
       current.add(1, 'day');
     }
 
