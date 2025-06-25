@@ -1679,6 +1679,11 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+@media (min-width: 768px) {
+    .col-md-6 {
+        flex: 0 0 auto;
+        width: 100%;
+    }}
 @media (max-width: 768px) {
   .leave-filter-group {
     flex-direction: column;
@@ -1772,5 +1777,91 @@ input:focus, select:focus, textarea:focus {
   }
   50% { 
     box-shadow: 0 4px 16px rgba(251,191,36,0.5);
+  }
+}
+.loginPage {
+  background: linear-gradient(120deg, var(--primary-light) 0%, var(--white) 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loginForm {
+  background: var(--glass);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  padding: 2.5rem 2rem;
+  animation: fadeInUp 0.7s cubic-bezier(.4,0,.2,1);
+  width: 100%;
+  max-width: 380px;
+}
+
+.loginForm h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.loginForm .btn {
+  flex: 1;
+  border-radius: var(--radius-sm);
+  padding: 0.7em 1.2em;
+  font-weight: 600;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.loginForm .btn-primary {
+  background: var(--edit);
+  color: var(--white);
+}
+
+.loginForm .btn-primary:hover {
+  background: var(--edit-hover);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px 4px #3b82f655;
+}
+
+.loginForm .btn-success {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.loginForm .btn-success:hover {
+  background: var(--primary-dark);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px 4px #1ea69a55;
+}
+
+.loginForm .btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: var(--shimmer);
+  opacity: 0.7;
+  transition: left 0.5s;
+  z-index: 2;
+}
+
+.loginForm .btn:hover::after {
+  left: 120%;
+}
+
+@media (max-width: 500px) {
+  .loginForm {
+    width: 90%;
+    padding: 1.8rem 1.2rem;
+  }
+
+  .loginForm h2 {
+    font-size: 1.4rem;
   }
 }
