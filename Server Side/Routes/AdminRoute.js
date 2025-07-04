@@ -300,50 +300,57 @@ router.get('/logout', (req, res) => {
   return res.json({Status: true})
 })
 
-// Auto-schedule work shifts for all employees (Monday-Saturday, 2 shifts/day)
+// Auto-schedule work shifts for all employees (Monday-Saturday, 2 shifts/day) - 4 TUẦN
 router.post('/auto_schedule', async (req, res) => {
   try {
-    const [employees] = await pool.query("SELECT id FROM employee");
+    const [employees] = await pool.query("SELECT id FROM employee ORDER BY id");
     if (!employees.length) return res.json({ Status: false, Error: "No employees found" });
 
-    // Start from the first Monday of the month
-    let startDate = moment().startOf('month');
-    while (startDate.isoWeekday() !== 1) { // 1 = Monday
-      startDate.add(1, 'day');
-    }
-    const endDate = moment(startDate).endOf('month');
+    // Bắt đầu từ thứ 2 của tuần hiện tại
+    let startDate = moment().startOf('isoWeek'); // Thứ 2 tuần này
+    
+    // Kết thúc vào thứ 7 của tuần thứ 4 (tuần hiện tại + 3 tuần tiếp theo)
+    let endDate = startDate.clone().add(3, 'weeks').endOf('isoWeek').subtract(1, 'day'); // Thứ 7 tuần thứ 4
+    
     let schedule = [];
 
-    // Remove old schedules for this month
+    // Xóa lịch cũ trong khoảng thời gian tạo
     await pool.query(
       "DELETE FROM work_schedules WHERE date >= ? AND date <= ?",
-      [startDate.clone().startOf('month').format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')]
+      [startDate.format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')]
     );
 
-    // Generate schedule for each day (skip Sundays)
+    console.log('Scheduling from:', startDate.format('YYYY-MM-DD'), 'to:', endDate.format('YYYY-MM-DD'));
+
+    // Tạo lịch cho từng ngày (bỏ qua Chủ nhật)
     let current = startDate.clone();
-    let weekNumber = 1;
-    let lastWeek = current.isoWeek();
+    let weekNumber = 1; // Bắt đầu từ tuần 1
 
     while (current.isSameOrBefore(endDate, 'day')) {
       const dayOfWeek = current.isoWeekday(); // 1=Monday, 7=Sunday
-
-      // Increase weekNumber when a new week starts
-      if (current.isoWeek() !== lastWeek) {
+      
+      // Khi sang tuần mới (thứ 2), tăng weekNumber
+      if (dayOfWeek === 1 && !current.isSame(startDate, 'day')) {
         weekNumber++;
-        lastWeek = current.isoWeek();
       }
 
-      if (dayOfWeek !== 7) // Skip Sunday
+      if (dayOfWeek !== 7) { // Bỏ qua Chủ nhật
         for (let emp of employees) {
           let shift;
-          if (emp.id % 2 === 1) { // Odd id
-            shift = weekNumber % 2 === 1 ? 'morning' : 'night';
-          } else { // Even id
-            shift = weekNumber % 2 === 1 ? 'night' : 'morning';
+          
+          // Logic phân ca:
+          // Tuần lẻ (1,3,5...): ID lẻ = morning, ID chẵn = night
+          // Tuần chẵn (2,4,6...): ID lẻ = night, ID chẵn = morning
+          if (weekNumber % 2 === 1) { // Tuần lẻ
+            shift = emp.id % 2 === 1 ? 'morning' : 'night';
+          } else { // Tuần chẵn
+            shift = emp.id % 2 === 1 ? 'night' : 'morning';
           }
+          
           schedule.push([emp.id, current.format('YYYY-MM-DD'), shift]);
+          console.log(`Employee ${emp.id}, Date: ${current.format('YYYY-MM-DD')}, Week: ${weekNumber}, Shift: ${shift}`);
         }
+      }
       current.add(1, 'day');
     }
 
@@ -354,8 +361,16 @@ router.post('/auto_schedule', async (req, res) => {
       );
     }
 
-    res.json({ Status: true, Message: "Auto-scheduling for 1 month completed", ScheduleCount: schedule.length });
+    res.json({ 
+      Status: true, 
+      Message: "Auto-scheduling completed successfully for 4 weeks", 
+      ScheduleCount: schedule.length,
+      StartDate: startDate.format('YYYY-MM-DD'),
+      EndDate: endDate.format('YYYY-MM-DD'),
+      WeeksGenerated: weekNumber
+    });
   } catch (err) {
+    console.error('Auto-schedule error:', err);
     res.json({ Status: false, Error: err.message });
   }
 });
